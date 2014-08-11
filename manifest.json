@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "DNSSEC Validator",
+  "description": "Verify the DNSSEC of the domain.",
+  "version": "0.1",
+  "minimum_chrome_version": "23",
+  "permissions": [
+    "https://secure.flickr.com/"
+  ],
+  "app": {
+    "background": {
+      "scripts": [ "dns.js" ]
+    }
+  },
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "sockets": {
+    "udp": {
+      "send": [ "*:53" ]
+    }
+  }
+}
