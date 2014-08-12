@@ -19,8 +19,7 @@ var onReceive = function(info) {
 	}
 }
 
-// Create the Socket
-chrome.sockets.udp.create({}, function(socketInfo) {
+function DNSRequest(domain) {
     var arrayBuffer = new ArrayBuffer(4096);
     var view = new DataView(arrayBuffer);
     var id = Math.floor(Math.random()*65536);
@@ -73,6 +72,12 @@ chrome.sockets.udp.create({}, function(socketInfo) {
     for(var i = 0; i < ptr; i++)
 	view2.setUint8(i, view.getUint8(i));
     arrayBuffer = buf2;
+    return arrayBuffer;
+}
+
+// Create the Socket
+chrome.sockets.udp.create({}, function(socketInfo) {
+    var arrayBuffer = DNSRequest(domain);
     socketId = socketInfo.socketId;
     chrome.sockets.udp.onReceive.addListener(onReceive);
     chrome.sockets.udp.bind(socketId, "0.0.0.0", 0, function(result) {
@@ -88,7 +93,40 @@ chrome.sockets.udp.create({}, function(socketInfo) {
 });
 
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
-	console.log("Got message: " + request.domain);
-	sendResponse({secure: true});
+	var socketId;
+	console.log("2Got message: " + request.domain);
+	var domain = request.domain;
+	var onReceive = function(info) {
+		if(info.socketId !== socketId)
+			return;
+		console.log(info.data);
+		var ad_flag = 1 << 5;
+		var view = new DataView(info.data);
+		var flags = view.getUint16(2);
+		var secure = false;
+		if((flags & ad_flag) == ad_flag) {
+		    console.log("2Authenticated data for '" + domain + "': 0x" + flags.toString(16) + "!");
+		    secure = true;
+		} else {
+		    console.log("2Not authentic for '" + domain + "': 0x" + flags.toString(16) + "!");
+		}
+		sendResponse({secure: secure});
+	}
+
+	chrome.sockets.udp.create({}, function(socketInfo) {
+	    var arrayBuffer = DNSRequest(domain);
+	    socketId = socketInfo.socketId;
+	    chrome.sockets.udp.onReceive.addListener(onReceive);
+	    chrome.sockets.udp.bind(socketId, "0.0.0.0", 0, function(result) {
+		if(result < 0) {
+		    console.log("2Error binding DNS socket.");
+		    return;
+		}
+		chrome.sockets.udp.send(socketId, arrayBuffer,
+		  '8.8.8.8', 53, function(sendInfo) {
+		    console.log("2sent " + sendInfo.bytesSent);
+		});
+	    });
+	});
 	return true;
 });
