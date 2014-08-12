@@ -1,0 +1,19 @@
+{
+  "background": {
+    "scripts": [ "eventPage.js" ],
+    "persistent": false
+  },
+  "manifest_version": 2,
+  "name": "DNSSEC Validator Action",
+  "description": "Verify the DNSSEC of the domain action.",
+  "version": "0.1",
+  "minimum_chrome_version": "33",
+  "page_action": {
+    "default_icon": {
+      "19": "icon.png"
+    },
+    "default_title": "DNSSEC",
+    "default_popup": "popup.html"
+  },
+  "permissions": [ "tabs", "notifications" ]
+}
