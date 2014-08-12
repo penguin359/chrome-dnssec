@@ -86,3 +86,9 @@ chrome.sockets.udp.create({}, function(socketInfo) {
 	});
     });
 });
+
+chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+	console.log("Got message: " + request.domain);
+	sendResponse({secure: true});
+	return true;
+});
